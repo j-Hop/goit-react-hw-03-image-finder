@@ -1,65 +1,49 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { BiSearchAlt } from 'react-icons/bi';
 import css from './Searchbar.module.css';
+import { toast } from 'react-toastify';
+import PropTypes from 'prop-types';
 
-const toastConfig = {
-  position: 'top-left',
-  autoClose: 2000,
-  hideProgressBar: false,
-  closeOnClick: true,
-  pauseOnHover: true,
-  draggable: true,
-  progress: undefined,
-  theme: 'light',
-};
-
-export default class Searchbar extends Component {
+export class Searchbar extends Component {
   state = {
-    searchQuery: '',
+    searcheQuery: '',
   };
-
-  handleChange = ({ target: { value } }) => {
-    this.setState({ searchQuery: value });
+  handleImageGhange = event => {
+    this.setState({
+      searcheQuery: event.target.value.toLowerCase(),
+    });
   };
-
-  handleSubmit = e => {
-    e.preventDefault();
-    const searchQuery = this.state.searchQuery.trim();
-    if (searchQuery === '') {
-      toast.warn('Please enter search query', toastConfig);
+  handleSubmit = event => {
+    event.preventDefault();
+    if (this.state.searcheQuery.trim() === '') {
+      toast.info('Please enter your query in the search field', {
+        autoClose: 1000,
+        hideProgressBar: true,
+        theme: 'colored',
+      });
       return;
     }
-    this.props.onSubmit(searchQuery);
-    this.setState({ searchQuery: '' });
+    this.props.onSubmit(this.state.searcheQuery);
+    this.setState({ searcheQuery: '' });
   };
-
   render() {
     return (
-      <header className={css.Searchbar}>
-        <form className={css.SearchForm} onSubmit={this.handleSubmit}>
-          <button type="submit" className={css.SearchForm_button}>
-            <BiSearchAlt className={css.svg} />
-            <span className={css.SearchForm_button_label}>Search</span>
+      <header className={css.searchbar}>
+        <form onSubmit={this.handleSubmit} className={css.form}>
+          <button type="submit" className={css.button}>
+            Search
           </button>
-
           <input
-            className={css.SearchForm_input}
+            className={css.input}
+            value={this.state.searcheQuery}
+            onChange={this.handleImageGhange}
             type="text"
             autoComplete="off"
             autoFocus
             placeholder="Search images and photos"
-            value={this.state.searchQuery}
-            onChange={this.handleChange}
           />
         </form>
       </header>
     );
   }
 }
-
-Searchbar.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
-};
+Searchbar.propTypes = { onSubmit: PropTypes.func.isRequired };

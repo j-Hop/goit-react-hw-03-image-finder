@@ -1,35 +1,37 @@
-import React from 'react';
+import { Component } from 'react';
 import css from './Modal.module.css';
+import PropTypes from 'prop-types';
 
-export class Modal extends React.Component {
-  handleKeyClick = e => {
-    if (e.key === 'Escape') {
-      this.props.onCloseModal();
-    }
-  };
-
-  handleOverlayClick = e => {
-    if (e.currentTarget === e.target) {
-      this.props.onCloseModal();
-    }
-  };
-
+export class Modal extends Component {
   componentDidMount() {
-    window.addEventListener('keydown', this.handleKeyClick);
+    window.addEventListener('keydown', this.hendleKeyDown);
   }
-
   componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleKeyClick);
+    window.removeEventListener('keydown', this.hendleKeyDown);
   }
-
+  hendleKeyDown = e => {
+    if (e.code === 'Escape') {
+      this.props.onClose();
+    }
+  };
+  hendleOverlayClick = e => {
+    if (e.currentTarget === e.target) {
+      this.props.onClose();
+    }
+  };
   render() {
-    const { imgURL, onCloseModal } = this.props;
+    const { largeImageURL, tags } = this.props;
     return (
-      <div className={css.Overlay} onClick={this.handleOverlayClick}>
-        <div className={css.Modal} onCloseModal={onCloseModal}>
-          <img src={imgURL} alt="" />
+      <div className={css.overlay} onClick={this.hendleOverlayClick}>
+        <div className={css.modal}>
+          <img src={largeImageURL} alt={tags} />
         </div>
       </div>
     );
   }
 }
+Modal.propTypes = {
+  largeImageURL: PropTypes.string.isRequired,
+  tags: PropTypes.string,
+  onClose: PropTypes.func.isRequired,
+};

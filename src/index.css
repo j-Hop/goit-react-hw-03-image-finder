@@ -1,11 +1,8 @@
-@import-normalize;
-
-/* bring in normalize.css styles */
+@import-normalize; /* bring in normalize.css styles */
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
-
 html {
   box-sizing: border-box;
   width: 100vw;
@@ -19,6 +16,7 @@ html {
 }
 
 body {
+  text-align: center;
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
@@ -33,10 +31,10 @@ img {
   max-width: 100%;
   height: auto;
 }
-
-/*
- * Стилі компонента App
- */
+ul,
+ol {
+  list-style: none;
+}
 .App {
   display: grid;
   grid-template-columns: 1fr;

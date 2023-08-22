@@ -1,128 +1,88 @@
 import { Component } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-import { ThreeDots } from 'react-loader-spinner';
-
-import Searchbar from './Searchbar/Searchbar';
-import { ImageGallery } from './ImageGallery/ImageGallery';
-import { fetchImages } from 'services/api';
 import { Button } from './Button/Button';
-import { Modal } from './Modal/Modal';
-import { Error } from './Error/Error';
-
-const toastConfig = {
-  position: 'top-left',
-  autoClose: 2000,
-  hideProgressBar: false,
-  closeOnClick: true,
-  pauseOnHover: true,
-  draggable: true,
-  progress: undefined,
-  theme: 'light',
-};
+import { ImageGallery } from './ImageGallery/ImageGallery';
+import { Loader } from './Loader/Loader';
+import { Searchbar } from './Searchbar/Searchbar';
+import { fetchData } from './api/api';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+//
 export class App extends Component {
   state = {
-    images: [],
-    searchQuery: '',
+    searcheQuery: '',
     page: 1,
-    loading: false,
-    loadMoreBtn: false,
-    error: false,
-
-    modal: { isOpen: false, imgURL: '' },
+    dataImages: [],
+    total: 0,
+    isLoading: false,
+    error: null,
   };
-
-  handleFormSubmit = searchQuery => {
-    this.setState({ searchQuery });
-  };
-
-  onLoadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
-  };
-
-  onOpenModal = imgURL => {
-    this.setState({ modal: { isOpen: true, imgURL: imgURL } });
-  };
-
-  onCloseModal = () => {
-    this.setState({ modal: { isOpen: false, imgURL: false } });
-  };
-
-  async componentDidUpdate(prevProps, prevState) {
-    const { searchQuery, page } = this.state;
-    const prevSearchQuery = prevState.searchQuery;
-    const prevPage = prevState.page;
-
-    if (searchQuery !== prevSearchQuery || prevPage !== page) {
+  async componentDidUpdate(_, prevState) {
+    const { searcheQuery, page } = this.state;
+    if (prevState.searcheQuery !== searcheQuery || prevState.page !== page) {
+      this.setState({ isLoading: true });
       try {
-        this.setState({ loading: true });
-        const images = await fetchImages(searchQuery, page);
+        const data = await fetchData(searcheQuery, page);
 
-        const totalHits = images.totalHits;
-        const totalPages = Math.ceil(totalHits / 12);
-        const isMorePages = page < totalPages;
-
-        if (prevSearchQuery !== searchQuery) {
-          this.setState({ images: images.hits, loadMoreBtn: isMorePages });
-        } else {
-          this.setState({
-            images: [...prevState.images, ...images.hits],
-            loadMoreBtn: isMorePages,
+        if (data.totalHits === 0) {
+          toast.warning('Not a valid request. Please enter a valid value!', {
+            autoClose: 1000,
+            hideProgressBar: true,
+            theme: 'colored',
+          });
+          return;
+        }
+        if (page === 1) {
+          toast.success(`Hooray! We found ${data.total} images.`, {
+            autoClose: 1000,
+            hideProgressBar: true,
+            theme: 'colored',
           });
         }
-
-        if (images.hits.length === 0) {
-          toast.warn('...ooops! No images', toastConfig);
-        }
-
-        if (page === 1 && images.hits.length > 0) {
-          toast.success('Your images were successfully fetched!', toastConfig);
-        }
-
-        if (page === totalPages) {
-          this.setState({ loadMoreBtn: false });
-        }
+        this.setState(prevState => ({
+          dataImages: [...prevState.dataImages, ...data.hits],
+          total: data.totalHits,
+        }));
       } catch (error) {
-        this.setState({ error: error.message });
-        toast.error(error.message, toastConfig);
+        this.setState({ error });
+        toast.error(error.message);
       } finally {
-        this.setState({ loading: false });
+        this.setState({ isLoading: false });
       }
     }
   }
-  //==========================================================
-  render() {
-    const { images, loading, loadMoreBtn, error, modal } = this.state;
-    return (
-      <div>
-        <ToastContainer />
+  handleFormSubmit = searcheQuery => {
+    this.setState({ searcheQuery, page: 1, dataImages: [] });
+  };
+  buttonLoadMore = () => {
+    this.setState(prevState => {
+      return { page: prevState.page + 1 };
+    });
 
-        {loading && (
-          <ThreeDots
-            height="80"
-            width="80"
-            radius="9"
-            color="#3f51b5"
-            ariaLabel="three-dots-loading"
-            wrapperStyle={{}}
-            wrapperClassName=""
-            visible={true}
-          />
-        )}
+    // page: prevState.page + 1,
+  };
+  render() {
+    const { dataImages, isLoading, total } = this.state;
+    return (
+      <>
         <Searchbar onSubmit={this.handleFormSubmit} />
-        {error && <Error error={error} />}
-        <ImageGallery images={images} onOpenModal={this.onOpenModal} />
-        {loadMoreBtn && <Button onClick={this.onLoadMore} />}
-        {modal.isOpen && (
-          <Modal
-            onCloseModal={this.onCloseModal}
-            onOpenModal={this.onOpenModal}
-            imgURL={modal.imgURL}
-          />
+        {dataImages.length > 0 && <ImageGallery images={dataImages} />}
+        {isLoading && <Loader />}
+        {!isLoading && total !== dataImages.length && (
+          <Button onClick={this.buttonLoadMore} />
         )}
-      </div>
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
+      </>
     );
   }
 }
-
